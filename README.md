@@ -1,2 +1,2 @@
-# cv_robot_navigation
+# CV Robot Navigation
 Autonomous robot navigation using Computer Vision.
