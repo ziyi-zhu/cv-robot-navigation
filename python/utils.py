@@ -52,8 +52,13 @@ def navigate(pos, dirn, vtms):
 	rts.sort()
 
 	rt = rts[0]
+	
+	if rt.length == 0:
+		angle = 0
+	else:
+		angle = angle_btwn(dirn, (rt.b - rt.a))
 
-	return [rts, angle_btwn(dirn, (rt.b - rt.a)), int(rt.length)]
+	return [rts, angle, int(rt.length)]
 
 
 def draw_vtm(frame, vtms):
@@ -63,6 +68,13 @@ def draw_vtm(frame, vtms):
 			(0, 0, 255), 1)
 		cv2.putText(frame, "({},{})".format(vtm[0], vtm[1]), tuple(vtm - 20),
 			cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
+
+def draw_pts(frame, pts):
+	for pt in pts:
+		# draw the bright spot on the image
+		cv2.drawMarker(frame, tuple(pt), (0, 255, 0), cv2.MARKER_TILTED_CROSS, 10, 1, 8)
+		cv2.putText(frame, "({},{})".format(pt[0], pt[1]), tuple(pt - 20),
+			cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
 
 def draw_bot(frame, pos, dirn):
 	cv2.line(frame, tuple(pos), tuple(pos + dirn), (0, 0, 255), 1) 
