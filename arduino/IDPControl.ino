@@ -56,7 +56,7 @@ void turn_left() {
 
 void move_forward(){
   Serial.println("Motor moving");
-  motor_red->setSpeed(move_speed*1.03);
+  motor_red->setSpeed(move_speed*1.05);
   motor_wht->setSpeed(move_speed);
   motor_red->run(BACKWARD);
   motor_wht->run(BACKWARD);
@@ -64,7 +64,7 @@ void move_forward(){
 
 void move_backward(){
   Serial.println("Motor moving");
-  motor_red->setSpeed(move_speed*1.03);
+  motor_red->setSpeed(move_speed*1.05);
   motor_wht->setSpeed(move_speed);
   motor_red->run(FORWARD);
   motor_wht->run(FORWARD);
@@ -120,7 +120,7 @@ void setup() {
 
   pinMode(led_abr, OUTPUT);
 
-  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
+  myservo.attach(9);       // attaches the servo on pin 9 to the servo object
 
 
   // check for the WiFi module:
@@ -148,7 +148,7 @@ void setup() {
   server.begin();                           // start the web server on port 80
   printWifiStatus();                        // you're connected now, so print out the status
 
-  myservo.write(90);    // servo moves up
+  myservo.write(90);                        // servo moves up
   drop();
 }
 
@@ -239,7 +239,4 @@ void printWifiStatus() {
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
-  // print where to go in a browser:
-  Serial.print("To see this page in action, open a browser to http://");
-  Serial.println(ip);
 }

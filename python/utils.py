@@ -63,7 +63,6 @@ def navigate(pos, dirn, vtms):
 
 def draw_vtm(frame, vtms):
 	for vtm in vtms:
-		# draw the bright spot on the image
 		cv2.circle(frame, tuple(vtm), 10,
 			(0, 0, 255), 1)
 		cv2.putText(frame, "({},{})".format(vtm[0], vtm[1]), tuple(vtm - 20),
@@ -71,7 +70,6 @@ def draw_vtm(frame, vtms):
 
 def draw_pts(frame, pts):
 	for pt in pts:
-		# draw the bright spot on the image
 		cv2.drawMarker(frame, tuple(pt), (0, 255, 0), cv2.MARKER_TILTED_CROSS, 10, 1, 8)
 		cv2.putText(frame, "({},{})".format(pt[0], pt[1]), tuple(pt - 20),
 			cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)

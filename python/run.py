@@ -16,33 +16,38 @@ pool = Pool(10) # Creates a pool with ten threads; more threads = more concurren
 # api-endpoint 
 url = "http://192.168.43.224"
 
+# User input for the number of victims to be rescued
 print("Enter the number of victims:")
 num_vtms = int(input())
 
-dev_mode = False
+# If the program is running in dev environment
+dev_mode = True
 
 print("Starting camera...")
 
+# Specify the video input and frame rate
 if dev_mode:
-	cap = cv2.VideoCapture('capture.mp4')
+	cap = cv2.VideoCapture('capture.avi')
 	frame_rate = 30
 else:
 	cap = cv2.VideoCapture(1)
 	frame_rate = 5
 
+# Variable to store the previous time of analysed frame
 prev = 0
 
-# Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
+# Define the codec and create VideoWriter object.The output is stored in 'output.avi' file.
 out = cv2.VideoWriter('output.avi',cv2.VideoWriter_fourcc(*'XVID'), 30.0, (640,480))
 
-ret, frame = cap.read()
-mask = cv2.imread('mask.png', 0)
-calibrate = cv2.imread('calibrate.png', 0)
+# Load the mask for calibration and removing unwanted area from frames
+mask = cv2.imread('images/mask.png', 0)
+calibrate = cv2.imread('images/calibrate.png', 0)
 
 # Threshold of green in HSV space 
-lower_green = np.array([30, 40, 40]) 
-upper_green = np.array([70, 255, 255])
+lower_green = np.array([40, 40, 40]) 
+upper_green = np.array([60, 255, 255])
 
+# Find the victims and return their locations
 def find_vtms():
 	while cap.isOpened():
 		ret, frame = cap.read()
@@ -59,33 +64,39 @@ def find_vtms():
 
 		draw_vtm(frame, vtms)
 
-		# Write the frame into the file 'output.mp4'
+		# Write the frame into the file 'output.avi'
 		out.write(frame)
 
 		cv2.imshow('frame', frame)
+
+		# Return when the space key is pressed
 		if cv2.waitKey(1) == ord(' '):
 			return vtms
 
 vtms = find_vtms()
 
+# Define variables for sequential control
 starting = True
 returning = False
 restarting = False
 ending = False
 finished = True
 
+# Sequence of markers for robot movement
 start = [np.array([60, 288]),np.array([345, 289])]
-drop = [np.array([355, 278]), np.array([80, 280]), np.array([80, 160])]
-restart = [np.array([70, 288]),np.array([345, 288])]
+drop = [np.array([355, 278]), np.array([80, 282]), np.array([80, 160])]
+restart = [np.array([70, 290]),np.array([345, 288])]
 end = [np.array([60, 450])]
 
 seq = 0
 
+# Variables to store the location and orientation of robot
 pos = np.array([60, 450])
 dirn = np.array([0, -10])
 
 marker = []
 
+# Main loop
 while cap.isOpened():
 	time_elapsed = time.time() - prev
 	ret, frame = cap.read()
@@ -94,14 +105,16 @@ while cap.isOpened():
 		prev = time.time()
 
 		# Threshold of magenta in HSV space 
-		lower_magenta = np.array([150, 40, 40]) 
+		lower_magenta = np.array([150, 20, 180]) 
 		upper_magenta = np.array([180, 255, 255]) 
 
 		pts = detect(frame, mask, lower_magenta, upper_magenta)
 
+		# Determine whether the robot is found
 		if len(pts) >= 3:
 			pos, dirn = triangulate(pts)
 
+		# Initiate the starting sequence
 		if starting:
 			marker = start
 			rts, angle, dist = navigate(pos, dirn, start[seq:seq+1])
@@ -112,6 +125,7 @@ while cap.isOpened():
 					dist = 0
 					starting = False
 
+		# Initiate the restarting sequence
 		elif restarting:
 			marker = restart
 			rts, angle, dist = navigate(pos, dirn, restart[seq:seq+1])
@@ -122,6 +136,7 @@ while cap.isOpened():
 					dist = 0
 					restarting = False
 
+		# Initiate the returning sequence
 		elif returning:
 			marker = drop
 			rts, angle, dist = navigate(pos, dirn, drop[seq:seq+1])
@@ -140,6 +155,7 @@ while cap.isOpened():
 					else:
 						restarting = True
 
+		# Initialise the ending sequence
 		elif ending:
 			marker = end
 			rts, angle, dist = navigate(pos, dirn, end[seq:seq+1])
@@ -166,15 +182,16 @@ while cap.isOpened():
 				if not dev_mode:
 					r = requests.get(url + "/grab")
 
-		# defining a params dict for the parameters to be sent to the API 
+		# Defining a params dict for the parameters to be sent to the API 
 		parameters = {
 			"angle": angle,
 			"distance": dist
 		} 
   
-		# sending get request and saving the response as response object 
+		# Sending get request and saving the response as response object 
 		pool.apply_async(requests.get, [url + "/move", parameters])
 
+	# Draw annotations on every frame
 	draw_vtm(frame, vtms)
 
 	if not finished:
@@ -191,12 +208,15 @@ while cap.isOpened():
 
 	c = cv2.waitKey(1)
 
+	# Exit program when Esc key is pressed
 	if c == ord('\x1b'):
 		break
 
+	# Pause the sequence when p is pressed
 	elif c == ord('p'):
 		finished = not finished
 
+	# Restart the sequence when r is pressed
 	elif c == ord('r'):
 		vtms = find_vtms()
 
@@ -211,7 +231,6 @@ while cap.isOpened():
 		pos = np.array([60, 450])
 		dirn = np.array([0, -10])
 
- 
 cap.release()
 out.release()
 
